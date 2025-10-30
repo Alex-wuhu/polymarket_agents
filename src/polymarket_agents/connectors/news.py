@@ -3,7 +3,7 @@ import os
 
 from newsapi import NewsApiClient
 
-from agents.utils.objects import Article
+from polymarket_agents.utils.objects import Article
 
 
 class News:

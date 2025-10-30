@@ -47,7 +47,7 @@ This code is free and publicly available under MIT License open source license (
 
 # Getting started
 
-This repo is inteded for use with Python 3.9
+This repo targets Python 3.10+ and uses [uv](https://docs.astral.sh/uv/) for dependency management.
 
 1. Clone the repository
 
@@ -56,33 +56,13 @@ This repo is inteded for use with Python 3.9
    cd polymarket-agents
    ```
 
-2. Create the virtual environment
+2. Install dependencies with uv (installs into `.venv/` automatically)
 
    ```
-   virtualenv --python=python3.9 .venv
+   uv sync
    ```
 
-3. Activate the virtual environment
-
-   - On Windows:
-
-   ```
-   .venv\Scripts\activate
-   ```
-
-   - On macOS and Linux:
-
-   ```
-   source .venv/bin/activate
-   ```
-
-4. Install the required dependencies:
-
-   ```
-   pip install -r requirements.txt
-   ```
-
-5. Set up your environment variables:
+3. Set up your environment variables:
 
    - Create a `.env` file in the project root directory
 
@@ -97,27 +77,21 @@ This repo is inteded for use with Python 3.9
    OPENAI_API_KEY=""
    ```
 
-6. Load your wallet with USDC.
+4. Load your wallet with USDC.
 
-7. Try the command line interface...
+5. Try the command line interface...
 
    ```
-   python scripts/python/cli.py
+   uv run polymarket-agents --help
    ```
 
    Or just go trade! 
 
    ```
-   python agents/application/trade.py
+   uv run polymarket-agents run-autonomous-trader
    ```
 
-8. Note: If running the command outside of docker, please set the following env var:
-
-   ```
-   export PYTHONPATH="."
-   ```
-
-   If running with docker is preferred, we provide the following scripts:
+6. If running with docker is preferred, we provide the following scripts:
 
    ```
    ./scripts/bash/build-docker.sh
@@ -148,7 +122,7 @@ Files for managing your local environment, server set-up to run the application 
 
 Commands should follow this format:
 
-`python scripts/python/cli.py command_name [attribute value] [attribute value]`
+`uv run polymarket-agents command-name [attribute value] [attribute value]`
 
 Example:
 
@@ -156,7 +130,7 @@ Example:
 Retrieve and display a list of markets from Polymarket, sorted by volume.
 
    ```
-   python scripts/python/cli.py get-all-markets --limit <LIMIT> --sort-by <SORT_BY>
+   uv run polymarket-agents get-all-markets --limit <LIMIT> --sort-by <SORT_BY>
    ```
 
 - limit: The number of markets to retrieve (default: 5).

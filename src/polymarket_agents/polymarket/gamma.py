@@ -1,8 +1,8 @@
 import httpx
 import json
 
-from agents.polymarket.polymarket import Polymarket
-from agents.utils.objects import Market, PolymarketEvent, ClobReward, Tag
+from polymarket_agents.polymarket.polymarket import Polymarket
+from polymarket_agents.utils.objects import Market, PolymarketEvent, ClobReward, Tag
 
 
 class GammaMarketClient:

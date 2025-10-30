@@ -7,11 +7,21 @@ import time
 import ast
 import requests
 
-from dotenv import load_dotenv
+from polymarket_agents.settings.env import load_env
 
 from web3 import Web3
 from web3.constants import MAX_INT
-from web3.middleware import geth_poa_middleware
+try:
+    from web3.middleware.proof_of_authority import (
+        ExtraDataToPOAMiddleware as _POAMiddleware,
+    )
+except ImportError:  # pragma: no cover - fallback for older releases
+    try:
+        from web3.middleware.geth_poa import (  # type: ignore[attr-defined]
+            geth_poa_middleware as _POAMiddleware,
+        )
+    except ImportError:  # pragma: no cover
+        from web3.middleware import geth_poa_middleware as _POAMiddleware
 
 import httpx
 from py_clob_client.client import ClobClient
@@ -28,9 +38,9 @@ from py_clob_client.clob_types import (
 )
 from py_clob_client.order_builder.constants import BUY
 
-from agents.utils.objects import SimpleMarket, SimpleEvent
+from polymarket_agents.utils.objects import SimpleMarket, SimpleEvent
 
-load_dotenv()
+load_env()
 
 
 class Polymarket:
@@ -45,7 +55,6 @@ class Polymarket:
         self.chain_id = 137  # POLYGON
         self.private_key = os.getenv("POLYGON_WALLET_PRIVATE_KEY")
         self.polygon_rpc = "https://polygon-rpc.com"
-        self.w3 = Web3(Web3.HTTPProvider(self.polygon_rpc))
 
         self.exchange_address = "0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982e"
         self.neg_risk_exchange_address = "0xC5d563A36AE78145C45a50134d48A1215220f80a"
@@ -57,7 +66,8 @@ class Polymarket:
         self.ctf_address = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
 
         self.web3 = Web3(Web3.HTTPProvider(self.polygon_rpc))
-        self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        self.w3 = self.web3  # backwards compatibility for legacy attribute name
+        self.web3.middleware_onion.inject(_POAMiddleware, layer=0)
 
         self.usdc = self.web3.eth.contract(
             address=self.usdc_address, abi=self.erc20_approve
@@ -431,8 +441,7 @@ def main():
 
 
 if __name__ == "__main__":
-    load_dotenv()
-
+    load_env()
     p = Polymarket()
 
     # k = p.get_api_key()

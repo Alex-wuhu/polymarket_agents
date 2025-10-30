@@ -1,17 +1,26 @@
 import typer
 from devtools import pprint
 
-from agents.polymarket.polymarket import Polymarket
-from agents.connectors.chroma import PolymarketRAG
-from agents.connectors.news import News
-from agents.application.trade import Trader
-from agents.application.executor import Executor
-from agents.application.creator import Creator
+from polymarket_agents.polymarket.polymarket import Polymarket
+from polymarket_agents.connectors.chroma import PolymarketRAG
+from polymarket_agents.connectors.news import News
+from polymarket_agents.application.trade import Trader
+from polymarket_agents.application.executor import Executor
+from polymarket_agents.application.creator import Creator
 
 app = typer.Typer()
-polymarket = Polymarket()
-newsapi_client = News()
-polymarket_rag = PolymarketRAG()
+
+
+def get_polymarket() -> Polymarket:
+    return Polymarket()
+
+
+def get_news_client() -> News:
+    return News()
+
+
+def get_polymarket_rag() -> PolymarketRAG:
+    return PolymarketRAG()
 
 
 @app.command()
@@ -20,8 +29,9 @@ def get_all_markets(limit: int = 5, sort_by: str = "spread") -> None:
     Query Polymarket's markets
     """
     print(f"limit: int = {limit}, sort_by: str = {sort_by}")
-    markets = polymarket.get_all_markets()
-    markets = polymarket.filter_markets_for_trading(markets)
+    client = get_polymarket()
+    markets = client.get_all_markets()
+    markets = client.filter_markets_for_trading(markets)
     if sort_by == "spread":
         markets = sorted(markets, key=lambda x: x.spread, reverse=True)
     markets = markets[:limit]
@@ -33,7 +43,7 @@ def get_relevant_news(keywords: str) -> None:
     """
     Use NewsAPI to query the internet
     """
-    articles = newsapi_client.get_articles_for_cli_keywords(keywords)
+    articles = get_news_client().get_articles_for_cli_keywords(keywords)
     pprint(articles)
 
 
@@ -43,8 +53,9 @@ def get_all_events(limit: int = 5, sort_by: str = "number_of_markets") -> None:
     Query Polymarket's events
     """
     print(f"limit: int = {limit}, sort_by: str = {sort_by}")
-    events = polymarket.get_all_events()
-    events = polymarket.filter_events_for_trading(events)
+    client = get_polymarket()
+    events = client.get_all_events()
+    events = client.filter_events_for_trading(events)
     if sort_by == "number_of_markets":
         events = sorted(events, key=lambda x: len(x.markets), reverse=True)
     events = events[:limit]
@@ -56,7 +67,7 @@ def create_local_markets_rag(local_directory: str) -> None:
     """
     Create a local markets database for RAG
     """
-    polymarket_rag.create_local_markets_rag(local_directory=local_directory)
+    get_polymarket_rag().create_local_markets_rag(local_directory=local_directory)
 
 
 @app.command()
@@ -64,7 +75,7 @@ def query_local_markets_rag(vector_db_directory: str, query: str) -> None:
     """
     RAG over a local database of Polymarket's events
     """
-    response = polymarket_rag.query_local_markets_rag(
+    response = get_polymarket_rag().query_local_markets_rag(
         local_directory=vector_db_directory, query=query
     )
     pprint(response)

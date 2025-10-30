@@ -1,9 +1,10 @@
 import os
 
-from dotenv import load_dotenv
 from tavily import TavilyClient
 
-load_dotenv()
+from polymarket_agents.settings.env import load_env
+
+load_env()
 
 openai_api_key = os.getenv("OPEN_API_KEY")
 tavily_api_key = os.getenv("TAVILY_API_KEY")

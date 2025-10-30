@@ -1,4 +1,4 @@
-from agents.application.trade import Trader
+from polymarket_agents.application.trade import Trader
 
 import time
 

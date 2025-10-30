@@ -6,15 +6,14 @@ from typing import List, Dict, Any
 
 import math
 
-from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
-from agents.polymarket.gamma import GammaMarketClient as Gamma
-from agents.connectors.chroma import PolymarketRAG as Chroma
-from agents.utils.objects import SimpleEvent, SimpleMarket
-from agents.application.prompts import Prompter
-from agents.polymarket.polymarket import Polymarket
+from polymarket_agents.polymarket.gamma import GammaMarketClient as Gamma
+from polymarket_agents.connectors.chroma import PolymarketRAG as Chroma
+from polymarket_agents.utils.objects import SimpleEvent, SimpleMarket
+from polymarket_agents.application.prompts import Prompter
+from polymarket_agents.polymarket.polymarket import Polymarket
 
 def retain_keys(data, keys_to_retain):
     if isinstance(data, dict):
@@ -30,7 +29,9 @@ def retain_keys(data, keys_to_retain):
 
 class Executor:
     def __init__(self, default_model='gpt-3.5-turbo-16k') -> None:
-        load_dotenv()
+        from polymarket_agents.settings.env import load_env
+
+        load_env()
         max_token_model = {'gpt-3.5-turbo-16k':15000, 'gpt-4-1106-preview':95000}
         self.token_limit = max_token_model.get(default_model)
         self.prompter = Prompter()
@@ -183,8 +184,8 @@ class Executor:
 
     def format_trade_prompt_for_execution(self, best_trade: str) -> float:
         data = best_trade.split(",")
-        # price = re.findall("\d+\.\d+", data[0])[0]
-        size = re.findall("\d+\.\d+", data[1])[0]
+        # price = re.findall(r"\d+\.\d+", data[0])[0]
+        size = re.findall(r"\d+\.\d+", data[1])[0]
         usdc_balance = self.polymarket.get_usdc_balance()
         return float(size) * usdc_balance
 

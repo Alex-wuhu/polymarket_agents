@@ -6,8 +6,8 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import JSONLoader
 from langchain_community.vectorstores.chroma import Chroma
 
-from agents.polymarket.gamma import GammaMarketClient
-from agents.utils.objects import SimpleEvent, SimpleMarket
+from polymarket_agents.polymarket.gamma import GammaMarketClient
+from polymarket_agents.utils.objects import SimpleEvent, SimpleMarket
 
 
 class PolymarketRAG:

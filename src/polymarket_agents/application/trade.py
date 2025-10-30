@@ -1,15 +1,30 @@
-from agents.application.executor import Executor as Agent
-from agents.polymarket.gamma import GammaMarketClient as Gamma
-from agents.polymarket.polymarket import Polymarket
+from polymarket_agents.application.executor import Executor as Agent
+from polymarket_agents.polymarket.gamma import GammaMarketClient as Gamma
+from polymarket_agents.polymarket.polymarket import Polymarket
+
+import shutil
 
 
-class Creator:
+class Trader:
     def __init__(self):
         self.polymarket = Polymarket()
         self.gamma = Gamma()
         self.agent = Agent()
 
-    def one_best_market(self):
+    def pre_trade_logic(self) -> None:
+        self.clear_local_dbs()
+
+    def clear_local_dbs(self) -> None:
+        try:
+            shutil.rmtree("local_db_events")
+        except:
+            pass
+        try:
+            shutil.rmtree("local_db_markets")
+        except:
+            pass
+
+    def one_best_trade(self) -> None:
         """
 
         one_best_trade is a strategy that evaluates all events, markets, and orderbooks
@@ -20,6 +35,8 @@ class Creator:
 
         """
         try:
+            self.pre_trade_logic()
+
             events = self.polymarket.get_all_tradeable_events()
             print(f"1. FOUND {len(events)} EVENTS")
 
@@ -34,13 +51,18 @@ class Creator:
             filtered_markets = self.agent.filter_markets(markets)
             print(f"4. FILTERED {len(filtered_markets)} MARKETS")
 
-            best_market = self.agent.source_best_market_to_create(filtered_markets)
-            print(f"5. IDEA FOR NEW MARKET {best_market}")
-            return best_market
+            market = filtered_markets[0]
+            best_trade = self.agent.source_best_trade(market)
+            print(f"5. CALCULATED TRADE {best_trade}")
+
+            amount = self.agent.format_trade_prompt_for_execution(best_trade)
+            # Please refer to TOS before uncommenting: polymarket.com/tos
+            # trade = self.polymarket.execute_market_order(market, amount)
+            # print(f"6. TRADED {trade}")
 
         except Exception as e:
             print(f"Error {e} \n \n Retrying")
-            self.one_best_market()
+            self.one_best_trade()
 
     def maintain_positions(self):
         pass
@@ -50,5 +72,5 @@ class Creator:
 
 
 if __name__ == "__main__":
-    c = Creator()
-    c.one_best_market()
+    t = Trader()
+    t.one_best_trade()
