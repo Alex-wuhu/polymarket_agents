@@ -100,12 +100,19 @@ This repo targets Python 3.10+ and uses [uv](https://docs.astral.sh/uv/) for dep
 
 ## Logging
 
-Basic logging is enabled by default and mirrors the previous console output. To silence logs set `POLYMARKET_LOGGING=0` (or `false`/`off`) in your environment, or toggle it at runtime via:
+The helper in `polymarket_agents.utils.logging` provides three levels with color-coded output:
+
+- `print_log(...)`: user-facing information (default level).
+- `debug(...)`: diagnostic messages hidden unless `POLYMARKET_LOG_LEVEL=debug`.
+- `error(...)`: always shown, emitted to stderr.
+
+Disable non-error logs by setting `POLYMARKET_LOGGING=0`, or adjust verbosity in code:
 
 ```python
-from polymarket_agents.utils import enable_logging
+from polymarket_agents.utils import enable_logging, set_log_level
 
-enable_logging(False)
+enable_logging(True)        # toggle non-error logs
+set_log_level("debug")      # one of: debug, print, error
 ```
 
 ## Architecture

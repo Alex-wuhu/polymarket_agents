@@ -7,7 +7,7 @@ from polymarket_agents.connectors.news import News
 from polymarket_agents.application.trade import Trader
 from polymarket_agents.application.executor import Executor
 from polymarket_agents.application.creator import Creator
-from polymarket_agents.utils.logging import is_enabled, log
+from polymarket_agents.utils.logging import is_enabled, print_log
 
 app = typer.Typer()
 
@@ -29,7 +29,7 @@ def get_all_markets(limit: int = 5, sort_by: str = "spread") -> None:
     """
     Query Polymarket's markets
     """
-    log(f"limit: int = {limit}, sort_by: str = {sort_by}")
+    print_log(f"limit: int = {limit}, sort_by: str = {sort_by}")
     client = get_polymarket()
     markets = client.get_all_markets()
     markets = client.filter_markets_for_trading(markets)
@@ -55,7 +55,7 @@ def get_all_events(limit: int = 5, sort_by: str = "number_of_markets") -> None:
     """
     Query Polymarket's events
     """
-    log(f"limit: int = {limit}, sort_by: str = {sort_by}")
+    print_log(f"limit: int = {limit}, sort_by: str = {sort_by}")
     client = get_polymarket()
     events = client.get_all_events()
     events = client.filter_events_for_trading(events)
@@ -91,14 +91,14 @@ def ask_superforecaster(event_title: str, market_question: str, outcome: str) ->
     """
     Ask a superforecaster about a trade
     """
-    log(
+    print_log(
         f"event: str = {event_title}, question: str = {market_question}, outcome (usually yes or no): str = {outcome}"
     )
     executor = Executor()
     response = executor.get_superforecast(
         event_title=event_title, market_question=market_question, outcome=outcome
     )
-    log(f"Response:{response}")
+    print_log(f"Response:{response}")
 
 
 @app.command()
@@ -108,17 +108,7 @@ def create_market() -> None:
     """
     c = Creator()
     market_description = c.one_best_market()
-    log(f"market_description: str = {market_description}")
-
-
-@app.command()
-def ask_llm(user_input: str) -> None:
-    """
-    Ask a question to the LLM and get a response.
-    """
-    executor = Executor()
-    response = executor.get_llm_response(user_input)
-    log(f"LLM Response: {response}")
+    print_log(f"market_description: str = {market_description}")
 
 
 @app.command()
@@ -128,7 +118,7 @@ def ask_polymarket_llm(user_input: str) -> None:
     """
     executor = Executor()
     response = executor.get_polymarket_llm(user_input=user_input)
-    log(f"LLM + current markets&events response: {response}")
+    print_log(f"LLM + current markets&events response: {response}")
 
 
 @app.command()

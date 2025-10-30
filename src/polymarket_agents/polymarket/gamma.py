@@ -3,7 +3,7 @@ import json
 
 from polymarket_agents.polymarket.polymarket import Polymarket
 from polymarket_agents.utils.objects import Market, PolymarketEvent, ClobReward, Tag
-from polymarket_agents.utils.logging import log
+from polymarket_agents.utils.logging import debug, error
 
 
 class GammaMarketClient:
@@ -38,15 +38,15 @@ class GammaMarketClient:
 
             return Market(**market_object)
         except Exception as err:
-            log(f"[parse_market] Caught exception: {err}")
-            log("exception while handling object:", market_object)
+            error(f"[parse_market] Caught exception: {err}")
+            debug("exception while handling object:", market_object)
 
     # Event parser for events nested under a markets api response
     def parse_nested_event(self, event_object: dict()) -> PolymarketEvent:
-        log("[parse_nested_event] called with:", event_object)
+        debug("[parse_nested_event] called with:", event_object)
         try:
             if "tags" in event_object:
-                log("tags here", event_object["tags"])
+                debug("tags here", event_object["tags"])
                 tags: list[Tag] = []
                 for tag in event_object["tags"]:
                     tags.append(Tag(**tag))
@@ -54,20 +54,20 @@ class GammaMarketClient:
 
             return PolymarketEvent(**event_object)
         except Exception as err:
-            log(f"[parse_event] Caught exception: {err}")
-            log("\n", event_object)
+            error(f"[parse_event] Caught exception: {err}")
+            debug("event object:", event_object)
 
     def parse_pydantic_event(self, event_object: dict) -> PolymarketEvent:
         try:
             if "tags" in event_object:
-                log("tags here", event_object["tags"])
+                debug("tags here", event_object["tags"])
                 tags: list[Tag] = []
                 for tag in event_object["tags"]:
                     tags.append(Tag(**tag))
                 event_object["tags"] = tags
             return PolymarketEvent(**event_object)
         except Exception as err:
-            log(f"[parse_event] Caught exception: {err}")
+            error(f"[parse_event] Caught exception: {err}")
 
     def get_markets(
         self, querystring_params={}, parse_pydantic=False, local_file_path=None
@@ -91,7 +91,7 @@ class GammaMarketClient:
                     markets.append(self.parse_pydantic_market(market_object))
                 return markets
         else:
-            log(f"Error response returned from api: HTTP {response.status_code}")
+            error(f"Error response returned from api: HTTP {response.status_code}")
             raise Exception()
 
     def get_events(
@@ -177,7 +177,7 @@ class GammaMarketClient:
 
     def get_market(self, market_id: int) -> dict():
         url = self.gamma_markets_endpoint + "/" + str(market_id)
-        log(url)
+        debug(url)
         response = httpx.get(url)
         return response.json()
 
