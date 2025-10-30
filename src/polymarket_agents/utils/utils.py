@@ -1,5 +1,7 @@
 import json
 
+from polymarket_agents.utils.logging import log
+
 
 def parse_camel_case(key) -> str:
     output = ""
@@ -25,7 +27,7 @@ def preprocess_market_object(market_object: dict) -> dict:
 
         if k in ["volume", "liquidity"]:
             description += f" This market has a current {k} of {v}."
-    print("\n\ndescription:", description)
+    log("\n\ndescription:", description)
 
     market_object["description"] = description
 
@@ -48,8 +50,8 @@ def preprocess_local_json(file_path: str, preprocessor_function: function) -> No
 
 
 def metadata_func(record: dict, metadata: dict) -> dict:
-    print("record:", record)
-    print("meta:", metadata)
+    log("record:", record)
+    log("meta:", metadata)
     for k, v in record.items():
         metadata[k] = v
 

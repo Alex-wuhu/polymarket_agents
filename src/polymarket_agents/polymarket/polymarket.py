@@ -8,6 +8,7 @@ import ast
 import requests
 
 from polymarket_agents.settings.env import load_env
+from polymarket_agents.utils.logging import log
 
 from web3 import Web3
 from web3.constants import MAX_INT
@@ -112,7 +113,7 @@ class Polymarket:
         usdc_approve_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_usdc_approve_tx, 600
         )
-        print(usdc_approve_tx_receipt)
+        log(usdc_approve_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -128,7 +129,7 @@ class Polymarket:
         ctf_approval_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_ctf_approval_tx, 600
         )
-        print(ctf_approval_tx_receipt)
+        log(ctf_approval_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -145,7 +146,7 @@ class Polymarket:
         usdc_approve_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_usdc_approve_tx, 600
         )
-        print(usdc_approve_tx_receipt)
+        log(usdc_approve_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -161,7 +162,7 @@ class Polymarket:
         ctf_approval_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_ctf_approval_tx, 600
         )
-        print(ctf_approval_tx_receipt)
+        log(ctf_approval_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -178,7 +179,7 @@ class Polymarket:
         usdc_approve_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_usdc_approve_tx, 600
         )
-        print(usdc_approve_tx_receipt)
+        log(usdc_approve_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -194,7 +195,7 @@ class Polymarket:
         ctf_approval_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_ctf_approval_tx, 600
         )
-        print(ctf_approval_tx_receipt)
+        log(ctf_approval_tx_receipt)
 
     def get_all_markets(self) -> "list[SimpleMarket]":
         markets = []
@@ -205,7 +206,7 @@ class Polymarket:
                     market_data = self.map_api_to_market(market)
                     markets.append(SimpleMarket(**market_data))
                 except Exception as e:
-                    print(e)
+                    log(e)
                     pass
         return markets
 
@@ -249,14 +250,14 @@ class Polymarket:
         events = []
         res = httpx.get(self.gamma_events_endpoint)
         if res.status_code == 200:
-            print(len(res.json()))
+            log(len(res.json()))
             for event in res.json():
                 try:
-                    print(1)
+                    log(1)
                     event_data = self.map_api_to_event(event)
                     events.append(SimpleEvent(**event_data))
                 except Exception as e:
-                    print(e)
+                    log(e)
                     pass
         return events
 
@@ -355,10 +356,10 @@ class Polymarket:
             amount=amount,
         )
         signed_order = self.client.create_market_order(order_args)
-        print("Execute market order... signed_order ", signed_order)
+        log("Execute market order... signed_order ", signed_order)
         resp = self.client.post_order(signed_order, orderType=OrderType.FOK)
-        print(resp)
-        print("Done!")
+        log(resp)
+        log("Done!")
         return resp
 
     def get_usdc_balance(self) -> float:
@@ -371,7 +372,7 @@ class Polymarket:
 def test():
     host = "https://clob.polymarket.com"
     key = os.getenv("POLYGON_WALLET_PRIVATE_KEY")
-    print(key)
+    log(key)
     chain_id = POLYGON
 
     # Create CLOB client and get/set API credentials
@@ -386,13 +387,13 @@ def test():
     chain_id = AMOY
     client = ClobClient(host, key=key, chain_id=chain_id, creds=creds)
 
-    print(client.get_markets())
-    print(client.get_simplified_markets())
-    print(client.get_sampling_markets())
-    print(client.get_sampling_simplified_markets())
-    print(client.get_market("condition_id"))
+    log(client.get_markets())
+    log(client.get_simplified_markets())
+    log(client.get_sampling_markets())
+    log(client.get_sampling_simplified_markets())
+    log(client.get_market("condition_id"))
 
-    print("Done!")
+    log("Done!")
 
 
 def gamma():
@@ -427,7 +428,7 @@ def gamma():
                 }
                 markets.append(SimpleMarket(**market_data))
             except Exception as err:
-                print(f"error {err} for market {id}")
+                log(f"error {err} for market {id}")
         pdb.set_trace()
     else:
         raise Exception()
@@ -437,7 +438,7 @@ def main():
     # auth()
     # test()
     # gamma()
-    print(Polymarket().get_all_events())
+    log(Polymarket().get_all_events())
 
 
 if __name__ == "__main__":

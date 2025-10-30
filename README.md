@@ -94,9 +94,19 @@ This repo targets Python 3.10+ and uses [uv](https://docs.astral.sh/uv/) for dep
 6. If running with docker is preferred, we provide the following scripts:
 
    ```
-   ./scripts/bash/build-docker.sh
-   ./scripts/bash/run-docker-dev.sh
-   ```
+ ./scripts/bash/build-docker.sh
+  ./scripts/bash/run-docker-dev.sh
+  ```
+
+## Logging
+
+Basic logging is enabled by default and mirrors the previous console output. To silence logs set `POLYMARKET_LOGGING=0` (or `false`/`off`) in your environment, or toggle it at runtime via:
+
+```python
+from polymarket_agents.utils import enable_logging
+
+enable_logging(False)
+```
 
 ## Architecture
 
