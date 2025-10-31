@@ -5,6 +5,9 @@ from .logging import (
     get_log_level,
     is_enabled,
     log,
+    log_debug,
+    log_error,
+    log_print,
     print_log,
     set_log_level,
 )
@@ -16,6 +19,9 @@ __all__ = [
     "get_log_level",
     "is_enabled",
     "log",
+    "log_debug",
+    "log_error",
+    "log_print",
     "print_log",
     "set_log_level",
 ]

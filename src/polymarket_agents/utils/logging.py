@@ -6,7 +6,15 @@ import os
 import sys
 from typing import Any
 
-_LEVELS = {"debug": 0, "print": 1, "error": 2}
+try:
+    from polymarket_agents.settings.env import load_env as _load_env
+except ImportError:  # pragma: no cover - fallback when module unavailable
+    _load_env = None
+
+_VERBOSITY_LEVELS = ("print", "debug")
+_VERBOSITY_INDEX = {name: idx for idx, name in enumerate(_VERBOSITY_LEVELS)}
+_DEFAULT_LEVEL = 0  # Level 0 shows only print messages (errors always emit)
+_MAX_LEVEL = len(_VERBOSITY_LEVELS) - 1
 _COLOR_CODES = {
     "debug": "\033[90m",  # Bright black / gray
     "print": "\033[96m",  # Cyan
@@ -15,17 +23,24 @@ _COLOR_CODES = {
 _RESET = "\033[0m"
 
 
-def _detect_default_level() -> int:
-    raw_level = os.getenv("POLYMARKET_LOG_LEVEL", "print").lower()
-    return _LEVELS.get(raw_level, _LEVELS["print"])
+def _initialize_from_environment() -> tuple[bool, int]:
+    """Derive initial logging toggle and level from env vars."""
+    if _load_env is not None:
+        _load_env()
+
+    raw_logging = os.getenv("POLYMARKET_LOGGING")
+    if raw_logging is None:
+        return True, _DEFAULT_LEVEL
+
+    normalized = raw_logging.strip()
+    if normalized.isdigit():
+        level_value = int(normalized)
+        return True, max(0, level_value)
+
+    return True, _DEFAULT_LEVEL
 
 
-_enabled: bool = os.getenv("POLYMARKET_LOGGING", "1").lower() not in {
-    "0",
-    "false",
-    "off",
-}
-_current_level: int = _detect_default_level()
+_enabled, _current_level = _initialize_from_environment()
 _color_enabled: bool = os.getenv("NO_COLOR") is None and (
     (hasattr(sys.stdout, "isatty") and sys.stdout.isatty())
     or (hasattr(sys.stderr, "isatty") and sys.stderr.isatty())
@@ -46,24 +61,36 @@ def is_enabled() -> bool:
 def set_log_level(level: str) -> None:
     """Adjust minimum log level (`debug`, `print`, `error`)."""
     global _current_level
-    normalized = level.lower()
-    if normalized not in _LEVELS:
-        raise ValueError(f"Unknown log level: {level}")
-    _current_level = _LEVELS[normalized]
+    if isinstance(level, str):
+        normalized = level.lower()
+        if normalized == "error":
+            _current_level = -1  # Only surface errors.
+            return
+        if normalized not in _VERBOSITY_INDEX:
+            raise ValueError(f"Unknown log level: {level}")
+        _current_level = _VERBOSITY_INDEX[normalized]
+        return
+
+    raise TypeError("Log level must be provided as a string name.")
 
 
 def get_log_level() -> str:
     """Return current log level name."""
-    for name, value in _LEVELS.items():
-        if value == _current_level:
-            return name
+    if _current_level < 0:
+        return "error"
+    effective_level = min(max(_current_level, 0), _MAX_LEVEL)
+    if 0 <= effective_level < len(_VERBOSITY_LEVELS):
+        return _VERBOSITY_LEVELS[effective_level]
     return "print"
 
 
 def _should_emit(level: str) -> bool:
     if level == "error":
         return True  # Always surface errors.
-    return _enabled and _LEVELS[level] >= _current_level
+    if not _enabled or _current_level < 0:
+        return False
+    effective_level = min(max(_current_level, 0), _MAX_LEVEL)
+    return _VERBOSITY_INDEX[level] <= effective_level
 
 
 def _format(level: str, message: str) -> str:
@@ -94,22 +121,29 @@ def _emit(
     print(formatted, end=end, file=target, flush=flush)
 
 
-def debug(*values: Any, sep: str = " ", end: str = "\n", flush: bool = False) -> None:
+def log_debug(
+    *values: Any, sep: str = " ", end: str = "\n", flush: bool = False
+) -> None:
     """Emit debug-level diagnostic output."""
     _emit("debug", *values, sep=sep, end=end, flush=flush)
 
 
-def print_log(
+def log_print(
     *values: Any, sep: str = " ", end: str = "\n", flush: bool = False
 ) -> None:
     """Emit user-facing informational output."""
     _emit("print", *values, sep=sep, end=end, flush=flush)
 
 
-def error(*values: Any, sep: str = " ", end: str = "\n", flush: bool = False) -> None:
+def log_error(
+    *values: Any, sep: str = " ", end: str = "\n", flush: bool = False
+) -> None:
     """Emit error output."""
     _emit("error", *values, sep=sep, end=end, flush=flush)
 
 
 # Backwards compatibility alias.
-log = print_log
+debug = log_debug
+print_log = log_print
+error = log_error
+log = log_print

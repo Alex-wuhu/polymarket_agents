@@ -14,7 +14,7 @@ from polymarket_agents.connectors.chroma import PolymarketRAG as Chroma
 from polymarket_agents.utils.objects import SimpleEvent, SimpleMarket
 from polymarket_agents.application.prompts import Prompter
 from polymarket_agents.polymarket.polymarket import Polymarket
-from polymarket_agents.utils.logging import debug, print_log
+from polymarket_agents.utils.logging import log_debug, log_print
 
 def retain_keys(data, keys_to_retain):
     if isinstance(data, dict):
@@ -44,13 +44,6 @@ class Executor:
         self.gamma = Gamma()
         self.chroma = Chroma()
         self.polymarket = Polymarket()
-
-    def get_llm_response(self, user_input: str) -> str:
-        system_message = SystemMessage(content=str(self.prompter.market_analyst()))
-        human_message = HumanMessage(content=user_input)
-        messages = [system_message, human_message]
-        result = self.llm.invoke(messages)
-        return result.content
 
     def get_superforecast(
         self, event_title: str, market_question: str, outcome: str
@@ -100,7 +93,7 @@ class Executor:
         else:
             # If exceeding limit, process in chunks
             chunk_size = len(combined_data) // ((total_tokens // token_limit) + 1)
-            print_log(
+            log_print(
                 f"total tokens {total_tokens} exceeding llm capacity, now will split and answer"
             )
             group_size = (total_tokens // token_limit) + 1 # 3 is safe factor
@@ -133,7 +126,7 @@ class Executor:
 
     def filter_events_with_rag(self, events: "list[SimpleEvent]") -> str:
         prompt = self.prompter.filter_events()
-        debug("... prompting ... ", prompt)
+        log_debug("... prompting ... ", prompt)
         return self.chroma.events(events, prompt)
 
     def map_filtered_events_to_markets(
@@ -151,7 +144,7 @@ class Executor:
 
     def filter_markets(self, markets) -> "list[tuple]":
         prompt = self.prompter.filter_markets()
-        debug("... prompting ... ", prompt)
+        log_debug("... prompting ... ", prompt)
         return self.chroma.markets(markets, prompt)
 
     def source_best_trade(self, market_object) -> str:
@@ -163,17 +156,17 @@ class Executor:
         description = market_document["page_content"]
 
         prompt = self.prompter.superforecaster(question, description, outcomes)
-        debug("... prompting ... ", prompt)
+        log_debug("... prompting ... ", prompt)
         result = self.llm.invoke(prompt)
         content = result.content
 
-        print_log("result: ", content)
+        log_print("result: ", content)
         prompt = self.prompter.one_best_trade(content, outcomes, outcome_prices)
-        debug("... prompting ... ", prompt)
+        log_debug("... prompting ... ", prompt)
         result = self.llm.invoke(prompt)
         content = result.content
 
-        print_log("result: ", content)
+        log_print("result: ", content)
         return content
 
     def format_trade_prompt_for_execution(self, best_trade: str) -> float:
@@ -185,7 +178,7 @@ class Executor:
 
     def source_best_market_to_create(self, filtered_markets) -> str:
         prompt = self.prompter.create_new_market(filtered_markets)
-        debug("... prompting ... ", prompt)
+        log_debug("... prompting ... ", prompt)
         result = self.llm.invoke(prompt)
         content = result.content
         return content

@@ -7,7 +7,7 @@ from polymarket_agents.connectors.news import News
 from polymarket_agents.application.trade import Trader
 from polymarket_agents.application.executor import Executor
 from polymarket_agents.application.creator import Creator
-from polymarket_agents.utils.logging import is_enabled, print_log
+from polymarket_agents.utils.logging import is_enabled, log_print
 
 app = typer.Typer()
 
@@ -29,7 +29,7 @@ def get_all_markets(limit: int = 5, sort_by: str = "spread") -> None:
     """
     Query Polymarket's markets
     """
-    print_log(f"limit: int = {limit}, sort_by: str = {sort_by}")
+    log_print(f"limit: int = {limit}, sort_by: str = {sort_by}")
     client = get_polymarket()
     markets = client.get_all_markets()
     markets = client.filter_markets_for_trading(markets)
@@ -55,10 +55,16 @@ def get_all_events(limit: int = 5, sort_by: str = "number_of_markets") -> None:
     """
     Query Polymarket's events
     """
-    print_log(f"limit: int = {limit}, sort_by: str = {sort_by}")
+    log_print(f"limit: int = {limit}, sort_by: str = {sort_by}")
     client = get_polymarket()
     events = client.get_all_events()
-    events = client.filter_events_for_trading(events)
+    filtered_events = client.filter_events_for_trading(events)
+    if not filtered_events:
+        log_print(
+            "No active unrestricted events returned; showing raw results instead."
+        )
+        filtered_events = events
+    events = filtered_events
     if sort_by == "number_of_markets":
         events = sorted(events, key=lambda x: len(x.markets), reverse=True)
     events = events[:limit]
@@ -91,14 +97,14 @@ def ask_superforecaster(event_title: str, market_question: str, outcome: str) ->
     """
     Ask a superforecaster about a trade
     """
-    print_log(
+    log_print(
         f"event: str = {event_title}, question: str = {market_question}, outcome (usually yes or no): str = {outcome}"
     )
     executor = Executor()
     response = executor.get_superforecast(
         event_title=event_title, market_question=market_question, outcome=outcome
     )
-    print_log(f"Response:{response}")
+    log_print(f"Response:{response}")
 
 
 @app.command()
@@ -108,7 +114,7 @@ def create_market() -> None:
     """
     c = Creator()
     market_description = c.one_best_market()
-    print_log(f"market_description: str = {market_description}")
+    log_print(f"market_description: str = {market_description}")
 
 
 @app.command()
@@ -118,7 +124,7 @@ def ask_polymarket_llm(user_input: str) -> None:
     """
     executor = Executor()
     response = executor.get_polymarket_llm(user_input=user_input)
-    print_log(f"LLM + current markets&events response: {response}")
+    log_print(f"LLM + current markets&events response: {response}")
 
 
 @app.command()

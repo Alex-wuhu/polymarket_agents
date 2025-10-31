@@ -1,7 +1,7 @@
 from polymarket_agents.application.executor import Executor as Agent
 from polymarket_agents.polymarket.gamma import GammaMarketClient as Gamma
 from polymarket_agents.polymarket.polymarket import Polymarket
-from polymarket_agents.utils.logging import error, print_log
+from polymarket_agents.utils.logging import log_error, log_print
 
 import shutil
 
@@ -39,22 +39,22 @@ class Trader:
             self.pre_trade_logic()
 
             events = self.polymarket.get_all_tradeable_events()
-            print_log(f"1. FOUND {len(events)} EVENTS")
+            log_print(f"1. FOUND {len(events)} EVENTS")
 
             filtered_events = self.agent.filter_events_with_rag(events)
-            print_log(f"2. FILTERED {len(filtered_events)} EVENTS")
+            log_print(f"2. FILTERED {len(filtered_events)} EVENTS")
 
             markets = self.agent.map_filtered_events_to_markets(filtered_events)
-            print_log("")
-            print_log(f"3. FOUND {len(markets)} MARKETS")
+            log_print("")
+            log_print(f"3. FOUND {len(markets)} MARKETS")
 
-            print_log("")
+            log_print("")
             filtered_markets = self.agent.filter_markets(markets)
-            print_log(f"4. FILTERED {len(filtered_markets)} MARKETS")
+            log_print(f"4. FILTERED {len(filtered_markets)} MARKETS")
 
             market = filtered_markets[0]
             best_trade = self.agent.source_best_trade(market)
-            print_log(f"5. CALCULATED TRADE {best_trade}")
+            log_print(f"5. CALCULATED TRADE {best_trade}")
 
             amount = self.agent.format_trade_prompt_for_execution(best_trade)
             # Please refer to TOS before uncommenting: polymarket.com/tos
@@ -62,7 +62,7 @@ class Trader:
             # print(f"6. TRADED {trade}")
 
         except Exception as e:
-            error(f"Error {e}. Retrying")
+            log_error(f"Error {e}. Retrying")
             self.one_best_trade()
 
     def maintain_positions(self):

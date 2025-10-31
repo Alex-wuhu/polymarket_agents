@@ -8,7 +8,7 @@ import ast
 import requests
 
 from polymarket_agents.settings.env import load_env
-from polymarket_agents.utils.logging import debug, error, print_log
+from polymarket_agents.utils.logging import log_debug, log_error, log_print
 
 from web3 import Web3
 from web3.constants import MAX_INT
@@ -113,7 +113,7 @@ class Polymarket:
         usdc_approve_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_usdc_approve_tx, 600
         )
-        debug(usdc_approve_tx_receipt)
+        log_debug(usdc_approve_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -129,7 +129,7 @@ class Polymarket:
         ctf_approval_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_ctf_approval_tx, 600
         )
-        debug(ctf_approval_tx_receipt)
+        log_debug(ctf_approval_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -146,7 +146,7 @@ class Polymarket:
         usdc_approve_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_usdc_approve_tx, 600
         )
-        debug(usdc_approve_tx_receipt)
+        log_debug(usdc_approve_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -162,7 +162,7 @@ class Polymarket:
         ctf_approval_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_ctf_approval_tx, 600
         )
-        debug(ctf_approval_tx_receipt)
+        log_debug(ctf_approval_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -179,7 +179,7 @@ class Polymarket:
         usdc_approve_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_usdc_approve_tx, 600
         )
-        debug(usdc_approve_tx_receipt)
+        log_debug(usdc_approve_tx_receipt)
 
         nonce = web3.eth.get_transaction_count(pub_key)
 
@@ -195,7 +195,7 @@ class Polymarket:
         ctf_approval_tx_receipt = web3.eth.wait_for_transaction_receipt(
             send_ctf_approval_tx, 600
         )
-        debug(ctf_approval_tx_receipt)
+        log_debug(ctf_approval_tx_receipt)
 
     def get_all_markets(self) -> "list[SimpleMarket]":
         markets = []
@@ -206,7 +206,7 @@ class Polymarket:
                     market_data = self.map_api_to_market(market)
                     markets.append(SimpleMarket(**market_data))
                 except Exception as e:
-                    error(e)
+                    log_error(e)
                     pass
         return markets
 
@@ -248,16 +248,23 @@ class Polymarket:
 
     def get_all_events(self) -> "list[SimpleEvent]":
         events = []
-        res = httpx.get(self.gamma_events_endpoint)
+        params = {
+            "active": "true",
+            "closed": "false",
+            "archived": "false",
+            "limit": 100,
+        }
+        res = httpx.get(self.gamma_events_endpoint, params=params)
         if res.status_code == 200:
-            debug("fetched events:", len(res.json()))
-            for event in res.json():
+            payload = res.json()
+            log_print("fetched events:", len(payload))
+            for event in payload:
                 try:
-                    debug("processing event")
+                    log_debug("processing event")
                     event_data = self.map_api_to_event(event)
                     events.append(SimpleEvent(**event_data))
                 except Exception as e:
-                    error(e)
+                    log_error(e)
                     pass
         return events
 
@@ -356,10 +363,10 @@ class Polymarket:
             amount=amount,
         )
         signed_order = self.client.create_market_order(order_args)
-        print_log("Execute market order... signed_order ", signed_order)
+        log_print("Execute market order... signed_order ", signed_order)
         resp = self.client.post_order(signed_order, orderType=OrderType.FOK)
-        print_log(resp)
-        print_log("Done!")
+        log_print(resp)
+        log_print("Done!")
         return resp
 
     def get_usdc_balance(self) -> float:
@@ -372,7 +379,7 @@ class Polymarket:
 def test():
     host = "https://clob.polymarket.com"
     key = os.getenv("POLYGON_WALLET_PRIVATE_KEY")
-    debug(key)
+    log_debug(key)
     chain_id = POLYGON
 
     # Create CLOB client and get/set API credentials
@@ -387,13 +394,13 @@ def test():
     chain_id = AMOY
     client = ClobClient(host, key=key, chain_id=chain_id, creds=creds)
 
-    debug(client.get_markets())
-    debug(client.get_simplified_markets())
-    debug(client.get_sampling_markets())
-    debug(client.get_sampling_simplified_markets())
-    debug(client.get_market("condition_id"))
+    log_debug(client.get_markets())
+    log_debug(client.get_simplified_markets())
+    log_debug(client.get_sampling_markets())
+    log_debug(client.get_sampling_simplified_markets())
+    log_debug(client.get_market("condition_id"))
 
-    debug("Done!")
+    log_debug("Done!")
 
 
 def gamma():
@@ -428,7 +435,7 @@ def gamma():
                 }
                 markets.append(SimpleMarket(**market_data))
             except Exception as err:
-                error(f"error {err} for market {id}")
+                log_error(f"error {err} for market {id}")
         pdb.set_trace()
     else:
         raise Exception()
@@ -438,7 +445,7 @@ def main():
     # auth()
     # test()
     # gamma()
-    print_log(Polymarket().get_all_events())
+    log_print(Polymarket().get_all_events())
 
 
 if __name__ == "__main__":

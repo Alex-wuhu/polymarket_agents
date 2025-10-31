@@ -32,7 +32,8 @@ dependencies = [
   "web3>=6.11",
   "py-clob-client>=0.17.5",
   "py-order-utils>=0.3",
-  "rich>=13.7"
+  "rich>=13.7",
+  "jq>=1.10.0",
 ]
 
 [project.optional-dependencies]
