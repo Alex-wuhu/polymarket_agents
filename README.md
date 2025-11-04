@@ -95,8 +95,14 @@ This repo targets Python 3.10+ and uses [uv](https://docs.astral.sh/uv/) for dep
 
    ```
  ./scripts/bash/build-docker.sh
-  ./scripts/bash/run-docker-dev.sh
+ ./scripts/bash/run-docker-dev.sh
   ```
+
+7. (Optional) Install git hooks to keep formatting consistent:
+
+   ```
+   uv run pre-commit install
+   ```
 
 ## Logging
 
@@ -120,43 +126,24 @@ enable_logging(True)        # toggle non-error logs
 set_log_level("debug")      # one of: debug, print, error
 ```
 
-## Architecture
+## Architecture in 5 Minutes
 
-The Polymarket Agents architecture features modular components that can be maintained and extended by individual community members.
+```
+src/polymarket_agents
+├── cli/            # Typer commands and CLI bootstrapping
+├── application/    # High-level agent workflows and orchestrators
+├── connectors/     # Integrations (Polymarket, News API, vector stores)
+├── polymarket/     # Trading logic, order utils, blockchain clients
+├── api/            # HTTP surfaces for external control and callbacks
+├── settings/       # Environment and configuration helpers
+└── utils/          # Shared logging, prompts, and helper utilities
+```
 
-### APIs
-
-Polymarket Agents connectors standardize data sources and order types.
-
-- `Chroma.py`: chroma DB for vectorizing news sources and other API data. Developers are able to add their own vector database implementations.
-
-- `Gamma.py`: defines `GammaMarketClient` class, which interfaces with the Polymarket Gamma API to fetch and parse market and event metadata. Methods to retrieve current and tradable markets, as well as defined information on specific markets and events.
-
-- `Polymarket.py`: defines a Polymarket class that interacts with the Polymarket API to retrieve and manage market and event data, and to execute orders on the Polymarket DEX. It includes methods for API key initialization, market and event data retrieval, and trade execution. The file also provides utility functions for building and signing orders, as well as examples for testing API interactions.
-
-- `Objects.py`: data models using Pydantic; representations for trades, markets, events, and related entities.
-
-### Scripts
-
-Files for managing your local environment, server set-up to run the application remotely, and cli for end-user commands.
-
-`cli.py` is the primary user interface for the repo. Users can run various commands to interact with the Polymarket API, retrieve relevant news articles, query local data, send data/prompts to LLMs, and execute trades in Polymarkets.
-
-Commands should follow this format:
-
-`uv run polymarket-agents command-name [attribute value] [attribute value]`
-
-Example:
-
-`get-all-markets`
-Retrieve and display a list of markets from Polymarket, sorted by volume.
-
-   ```
-   uv run polymarket-agents get-all-markets --limit <LIMIT> --sort-by <SORT_BY>
-   ```
-
-- limit: The number of markets to retrieve (default: 5).
-- sort_by: The sorting criterion, either volume (default) or another valid attribute.
+- The CLI is defined in `cli/main.py` and surfaces commands such as `get-all-markets` and `run-autonomous-trader`. Each command calls into orchestrators in `application/`. See `src/polymarket_agents/cli/README.md` for a map of available entry points.
+- Connectors encapsulate external services. `connectors/README.md` highlights the Polymarket client, Chromadb RAG integration, and news ingestion flow.
+- Domain models and trade execution live under `polymarket/`, while `api/` provides FastAPI routes for remote control. Both modules rely on typed Pydantic objects and reusable request helpers.
+- Configuration is centralized in `settings/`, which loads `.env` files and prepares runtime settings; downstream modules depend on these helpers instead of touching `os.environ` directly.
+- Scripts in `scripts/` wrap Docker builds, local dev startup, and CI-friendly runners. The `docs/` directory collects longer-form explanations and operational runbooks.
 
 # Contributing
 
