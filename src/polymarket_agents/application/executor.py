@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import json
 import ast
@@ -8,13 +10,14 @@ import math
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from polymarket_agents.polymarket.gamma import GammaMarketClient as Gamma
 from polymarket_agents.connectors.chroma import PolymarketRAG as Chroma
 from polymarket_agents.utils.objects import SimpleEvent, SimpleMarket
 from polymarket_agents.application.prompts import Prompter
 from polymarket_agents.polymarket.polymarket import Polymarket
-from polymarket_agents.utils.logging import log_debug, log_print
+from polymarket_agents.utils.logging import log_debug, log_print,log_error
 
 def retain_keys(data, keys_to_retain):
     if isinstance(data, dict):
@@ -36,11 +39,7 @@ class Executor:
         max_token_model = {'gpt-3.5-turbo-16k':15000, 'gpt-4-1106-preview':95000}
         self.token_limit = max_token_model.get(default_model)
         self.prompter = Prompter()
-        self.llm = ChatOpenAI(
-            api_key=os.getenv("OPENAI_API_KEY"),
-            model="gemini-2.5-flash",
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-        )
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
         self.gamma = Gamma()
         self.chroma = Chroma()
         self.polymarket = Polymarket()
@@ -130,12 +129,27 @@ class Executor:
         return self.chroma.events(events, prompt)
 
     def map_filtered_events_to_markets(
-        self, filtered_events: "list[SimpleEvent]"
-    ) -> "list[SimpleMarket]":
-        markets = []
-        for e in filtered_events:
-            data = json.loads(e[0].json())
-            market_ids = data["metadata"]["markets"].split(",")
+        self, filtered_events: list[SimpleEvent] | list[tuple]
+    ) -> list[SimpleMarket]:
+        markets: list[SimpleMarket] = []
+        log_debug("alex")
+        for entry in filtered_events:
+            if isinstance(entry, tuple):
+                document = entry[0]
+                metadata = getattr(document, "metadata", {})
+                market_ids_raw = metadata.get("markets", "")
+            elif isinstance(entry, SimpleEvent):
+                market_ids_raw = entry.markets
+            else:
+                log_error(f"Unsupported event type received: {type(entry)}")
+                continue
+
+            market_ids = [
+                market_id.strip()
+                for market_id in str(market_ids_raw).split(",")
+                if market_id.strip()
+            ]
+
             for market_id in market_ids:
                 market_data = self.gamma.get_market(market_id)
                 formatted_market_data = self.polymarket.map_api_to_market(market_data)

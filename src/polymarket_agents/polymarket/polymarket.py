@@ -5,7 +5,6 @@ import os
 import pdb
 import time
 import ast
-import requests
 
 from polymarket_agents.settings.env import load_env
 from polymarket_agents.utils.logging import log_debug, log_error, log_print
@@ -252,7 +251,8 @@ class Polymarket:
             "active": "true",
             "closed": "false",
             "archived": "false",
-            "limit": 100,
+            "restricted": "false",
+            "limit": 2,
         }
         res = httpx.get(self.gamma_events_endpoint, params=params)
         if res.status_code == 200:
@@ -262,28 +262,37 @@ class Polymarket:
                 try:
                     log_debug("processing event")
                     event_data = self.map_api_to_event(event)
+                    log_debug("event_data : ",event_data)
                     events.append(SimpleEvent(**event_data))
+                    log_debug("events length : ",len(events))
                 except Exception as e:
                     log_error(e)
                     pass
         return events
 
     def map_api_to_event(self, event) -> SimpleEvent:
-        description = event["description"] if "description" in event.keys() else ""
+        description = event.get("description") or ""
+        markets = event.get("markets") or []
+        market_ids: list[str] = []
+        for market in markets:
+            market_id = market.get("id")
+            if market_id is None:
+                continue
+            market_ids.append(str(market_id))
         return {
             "id": int(event["id"]),
-            "ticker": event["ticker"],
-            "slug": event["slug"],
-            "title": event["title"],
+            "ticker": event.get("ticker"),
+            "slug": event.get("slug"),
+            "title": event.get("title"),
             "description": description,
-            "active": event["active"],
-            "closed": event["closed"],
-            "archived": event["archived"],
-            "new": event["new"],
-            "featured": event["featured"],
-            "restricted": event["restricted"],
-            "end": event["endDate"],
-            "markets": ",".join([x["id"] for x in event["markets"]]),
+            "active": bool(event.get("active", False)),
+            "closed": bool(event.get("closed", False)),
+            "archived": bool(event.get("archived", False)),
+            "new": bool(event.get("new", False)),
+            "featured": bool(event.get("featured", False)),
+            "restricted": bool(event.get("restricted", False)),
+            "end": event.get("endDate"),
+            "markets": ",".join(market_ids),
         }
 
     def filter_events_for_trading(
@@ -298,10 +307,15 @@ class Polymarket:
                 and not event.closed
             ):
                 tradeable_events.append(event)
+        if not tradeable_events:
+            for event in events:
+                if event.active and not event.archived and not event.closed:
+                    tradeable_events.append(event)
         return tradeable_events
 
     def get_all_tradeable_events(self) -> "list[SimpleEvent]":
         all_events = self.get_all_events()
+        log_debug("Not filter length : " , len(all_events))
         return self.filter_events_for_trading(all_events)
 
     def get_sampling_simplified_markets(self) -> "list[SimpleEvent]":

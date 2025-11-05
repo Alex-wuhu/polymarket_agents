@@ -197,19 +197,18 @@ class ComplexMarket(BaseModel):
 
 class SimpleEvent(BaseModel):
     id: int
-    ticker: str
-    slug: str
-    title: str
-    description: str
-    end: str
-    active: bool
-    closed: bool
-    archived: bool
-    restricted: bool
-    new: bool
-    featured: bool
-    restricted: bool
-    markets: str
+    ticker: Optional[str] = None
+    slug: Optional[str] = None
+    title: Optional[str] = None
+    description: str = ""
+    end: Optional[str] = None
+    active: bool = False
+    closed: bool = False
+    archived: bool = False
+    restricted: bool = False
+    new: bool = False
+    featured: bool = False
+    markets: str = ""
 
 
 class Source(BaseModel):
