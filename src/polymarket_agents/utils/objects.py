@@ -24,26 +24,6 @@ class Trade(BaseModel):
     type: str
 
 
-class SimpleMarket(BaseModel):
-    id: int
-    question: str
-    # start: str
-    end: str
-    description: str
-    active: bool
-    # deployed: Optional[bool]
-    funded: bool
-    # orderMinSize: float
-    # orderPriceMinTickSize: float
-    rewardsMinSize: float
-    rewardsMaxSpread: float
-    # volume: Optional[float]
-    spread: float
-    outcomes: str
-    outcome_prices: str
-    clob_token_ids: Optional[str]
-
-
 class ClobReward(BaseModel):
     id: str  # returned as string in api but really an int?
     conditionId: str
@@ -69,6 +49,7 @@ class PolymarketEvent(BaseModel):
     ticker: Optional[str] = None
     slug: Optional[str] = None
     title: Optional[str] = None
+    description: Optional[str] = None
     startDate: Optional[str] = None
     creationDate: Optional[str] = (
         None  # fine in market event but missing from events response
@@ -106,6 +87,7 @@ class Market(BaseModel):
     question: Optional[str] = None
     conditionId: Optional[str] = None
     slug: Optional[str] = None
+    category: Optional[str] = None
     resolutionSource: Optional[str] = None
     endDate: Optional[str] = None
     liquidity: Optional[float] = None
@@ -114,7 +96,8 @@ class Market(BaseModel):
     icon: Optional[str] = None
     description: Optional[str] = None
     outcome: Optional[list] = None
-    outcomePrices: Optional[list] = None
+    outcomes: Optional[list[str]] = None
+    outcomePrices: Optional[list[float]] = None
     volume: Optional[float] = None
     active: Optional[bool] = None
     closed: Optional[bool] = None
@@ -139,7 +122,7 @@ class Market(BaseModel):
     startDateIso: Optional[str] = None
     hasReviewedDates: Optional[bool] = None
     volume24hr: Optional[float] = None
-    clobTokenIds: Optional[list] = None
+    clobTokenIds: Optional[list[str]] = None
     umaBond: Optional[int] = None  # returned as string from api?
     umaReward: Optional[int] = None  # returned as string from api?
     volume24hrClob: Optional[float] = None
@@ -167,48 +150,6 @@ class Market(BaseModel):
     rewardsMaxSpread: Optional[float] = None
     spread: Optional[float] = None
 
-
-class ComplexMarket(BaseModel):
-    id: int
-    condition_id: str
-    question_id: str
-    tokens: Union[str, str]
-    rewards: str
-    minimum_order_size: str
-    minimum_tick_size: str
-    description: str
-    category: str
-    end_date_iso: str
-    game_start_time: str
-    question: str
-    market_slug: str
-    min_incentive_size: str
-    max_incentive_spread: str
-    active: bool
-    closed: bool
-    seconds_delay: int
-    icon: str
-    fpmm: str
-    name: str
-    description: Union[str, None] = None
-    price: float
-    tax: Union[float, None] = None
-
-
-class SimpleEvent(BaseModel):
-    id: int
-    ticker: Optional[str] = None
-    slug: Optional[str] = None
-    title: Optional[str] = None
-    description: str = ""
-    end: Optional[str] = None
-    active: bool = False
-    closed: bool = False
-    archived: bool = False
-    restricted: bool = False
-    new: bool = False
-    featured: bool = False
-    markets: str = ""
 
 
 class Source(BaseModel):

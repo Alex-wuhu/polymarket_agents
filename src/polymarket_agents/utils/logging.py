@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import Any
+from typing import Any, Iterable
+
+from polymarket_agents.utils.objects import Market
 
 try:
     from polymarket_agents.settings.env import load_env as _load_env
@@ -147,3 +149,44 @@ debug = log_debug
 print_log = log_print
 error = log_error
 log = log_print
+
+
+def print_markets(markets: Iterable[Market]) -> None:
+    """Pretty-print key fields from a list of `Market` models."""
+    markets = list(markets)
+    if not markets:
+        log_print("No markets to display.")
+        return
+
+    border = "=" * 72
+    for market in markets:
+        log_print(border)
+        log_print(f"ID        : {market.id}")
+        log_print(f"Token IDs : {market.clobTokenIds or '-'}")
+        log_print(f"Slug      : {market.slug or '-'}")
+        log_print(f"Start Date: {market.startDate or market.startDateIso or '-'}")
+        log_print(f"End Date  : {market.endDate or market.endDateIso or '-'}")
+
+        description = (market.description or "").strip() or "-"
+        log_print("Description:")
+        log_print(f"  {description}")
+
+        outcomes = market.outcomes or []
+        log_print("Outcomes  :")
+        if outcomes:
+            for index, outcome in enumerate(outcomes, start=1):
+                log_print(f"  {index}. {outcome}")
+        else:
+            log_print("  -")
+
+        prices = market.outcomePrices or []
+        log_print("Prices    :")
+        if prices:
+            for index, price in enumerate(prices, start=1):
+                log_print(f"  {index}. {price}")
+        else:
+            log_print("  -")
+
+        volume = market.volume if market.volume is not None else "-"
+        log_print(f"Volume    : {volume}")
+    log_print(border)
