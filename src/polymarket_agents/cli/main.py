@@ -8,7 +8,11 @@ from polymarket_agents.application.finder import (
 )
 from polymarket_agents.polymarket.gamma import GammaMarketClient
 from polymarket_agents.polymarket.polymarket import Polymarket
-from polymarket_agents.utils.logging import log_error, log_print, print_markets
+from polymarket_agents.utils.logging import (
+    log_error,
+    log_print,
+    print_trades,
+)
 
 app = typer.Typer()
 
@@ -17,15 +21,6 @@ def get_polymarket() -> Polymarket:
     """Provide a Polymarket API client configured with default settings."""
     return Polymarket()
 
-@app.command()
-def show_markets() -> None:
-    """Find 3 Tradble markets."""
-    gamma = GammaMarketClient()
-    try:
-        sample_markets = gamma.get_tradable_markets(limit=3)
-        print_markets(sample_markets)
-    except Exception as exc:
-        log_error(f"[__main__] Failed to fetch tradable markets: {exc}")
 
 @app.command()
 def show_wallet_status() -> None:
@@ -57,6 +52,35 @@ def show_wallet_status() -> None:
 
     log_print(f"Wallet address: {address}")
     log_print(f"USDC balance : {usdc_balance:.6f}")
+
+
+@app.command()
+def show_trading_history(
+    limit: int = typer.Option(
+        10,
+        min=1,
+        help="Number of most-recent trades to display.",
+    )
+) -> None:
+    """Display recent trades associated with the configured account."""
+    polymarket = get_polymarket()
+    typer.echo("Fetching recent trades...", nl=False)
+
+    try:
+        trades = polymarket.client.get_trades()
+    except Exception as exc:  # pragma: no cover - defensive guard
+        typer.echo("")
+        log_error(f"Failed to fetch trading history: {exc}")
+        raise typer.Exit(code=1)
+
+    typer.echo(" done")
+
+    if not trades:
+        log_print("No trades found for this account.")
+        return
+
+    print_trades(trades[:limit])
+
 
 @app.command()
 def find_arbitrage(

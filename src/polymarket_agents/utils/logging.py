@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import Any, Iterable
+from datetime import datetime, timezone
+from typing import Any, Iterable, Mapping
 
 from polymarket_agents.utils.objects import Market
 
@@ -189,4 +190,51 @@ def print_markets(markets: Iterable[Market]) -> None:
 
         volume = market.volume if market.volume is not None else "-"
         log_print(f"Volume    : {volume}")
+    log_print(border)
+
+
+def _format_timestamp(value: Any) -> str:
+    if value in (None, "", 0):
+        return "-"
+    try:
+        timestamp = int(float(value))
+    except (TypeError, ValueError):
+        return str(value)
+    dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+    return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def _format_decimal(value: Any) -> str:
+    if value in (None, ""):
+        return "-"
+    try:
+        formatted = f"{float(value):.4f}"
+        return formatted.rstrip("0").rstrip(".") or "0"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def print_trades(trades: Iterable[Mapping[str, Any]]) -> None:
+    """Surface core fields from a list of trade dictionaries."""
+    trade_list = list(trades)
+    if not trade_list:
+        log_print("No trades to display.")
+        return
+
+    border = "-" * 68
+    for trade in trade_list:
+        log_print(border)
+        log_print(f"Trade ID  : {trade.get('id', '-')}")
+        log_print(
+            f"Side      : {trade.get('side', '-')}"
+            f" (status: {trade.get('status', '-')})"
+        )
+        size = _format_decimal(trade.get("size"))
+        price = _format_decimal(trade.get("price"))
+        log_print(f"Size/Price: {size} @ {price} USDC")
+        log_print(f"Outcome   : {trade.get('outcome', '-')}")
+        log_print(f"Market    : {trade.get('market', '-')}")
+        log_print(f"Trader    : {trade.get('trader_side', '-')}")
+        log_print(f"Match Time: {_format_timestamp(trade.get('match_time'))}")
+        log_print(f"Tx Hash   : {trade.get('transaction_hash', '-')}")
     log_print(border)
