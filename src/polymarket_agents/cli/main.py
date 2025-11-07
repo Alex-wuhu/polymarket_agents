@@ -6,11 +6,13 @@ from polymarket_agents.application.finder import (
     describe_opportunities,
     find_probabilistic_arbitrage,
 )
+from polymarket_agents.polymarket.data_api import DataAPI
 from polymarket_agents.polymarket.gamma import GammaMarketClient
 from polymarket_agents.polymarket.polymarket import Polymarket
 from polymarket_agents.utils.logging import (
     log_error,
     log_print,
+    print_positions,
     print_trades,
 )
 
@@ -80,6 +82,65 @@ def show_trading_history(
         return
 
     print_trades(trades[:limit])
+
+
+@app.command()
+def show_positions(
+    limit: int = typer.Option(
+        20,
+        min=1,
+        help="Maximum number of positions to request.",
+    ),
+    size_threshold: float = typer.Option(
+        1.0,
+        min=0.0,
+        help="Ignore positions below this token size.",
+    ),
+    sort_by: str = typer.Option(
+        "TOKENS",
+        help="Sort key accepted by the data API (e.g. TOKENS, VALUE, PNL).",
+    ),
+    sort_direction: str = typer.Option(
+        "DESC",
+        help="Sort direction (ASC or DESC).",
+    ),
+) -> None:
+    """Display readable position data for the configured wallet."""
+    polymarket = get_polymarket()
+    if not polymarket.private_key:
+        log_print(
+            "POLYGON_WALLET_PRIVATE_KEY is not set; unable to derive wallet address."
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        address = polymarket.get_address_for_private_key()
+    except Exception as exc:  # pragma: no cover - defensive guard
+        log_error(f"Failed to derive wallet address: {exc}")
+        raise typer.Exit(code=1)
+
+    data_api = DataAPI()
+    typer.echo("Fetching positions...", nl=False)
+    try:
+        positions = data_api.get_positions(
+            user=address,
+            limit=limit,
+            sizeThreshold=size_threshold,
+            sortBy=sort_by,
+            sortDirection=sort_direction,
+        )
+    except Exception as exc:  # pragma: no cover - defensive guard
+        typer.echo("")
+        log_error(f"Failed to fetch positions: {exc}")
+        raise typer.Exit(code=1)
+
+    typer.echo(" done")
+
+    if not positions:
+        log_print("No positions found for this account.")
+        return
+
+    print_positions(positions)
 
 
 @app.command()

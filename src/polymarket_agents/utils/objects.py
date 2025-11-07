@@ -4,24 +4,64 @@ from pydantic import BaseModel
 
 
 class Trade(BaseModel):
-    id: int
-    taker_order_id: str
-    market: str
-    asset_id: str
-    side: str
-    size: str
-    fee_rate_bps: str
-    price: str
-    status: str
-    match_time: str
-    last_update: str
-    outcome: str
-    maker_address: str
-    owner: str
-    transaction_hash: str
-    bucket_index: str
-    maker_orders: list[str]
-    type: str
+    id: str
+    taker_order_id: Optional[str] = None
+    market: Optional[str] = None
+    asset_id: Optional[str] = None
+    side: Optional[str] = None
+    size: Optional[str] = None
+    fee_rate_bps: Optional[str] = None
+    price: Optional[str] = None
+    status: Optional[str] = None
+    match_time: Optional[str] = None
+    last_update: Optional[str] = None
+    outcome: Optional[str] = None
+    bucket_index: Optional[int] = None
+    owner: Optional[str] = None
+    maker_address: Optional[str] = None
+    transaction_hash: Optional[str] = None
+    maker_orders: Optional[list["MakerOrder"]] = None
+    trader_side: Optional[str] = None
+
+
+class MakerOrder(BaseModel):
+    order_id: Optional[str] = None
+    owner: Optional[str] = None
+    maker_address: Optional[str] = None
+    matched_amount: Optional[str] = None
+    price: Optional[str] = None
+    fee_rate_bps: Optional[str] = None
+    asset_id: Optional[str] = None
+    outcome: Optional[str] = None
+    side: Optional[str] = None
+
+
+class Position(BaseModel):
+    proxyWallet: Optional[str] = None
+    asset: Optional[str] = None
+    conditionId: Optional[str] = None
+    size: Optional[Union[int, float, str]] = None
+    avgPrice: Optional[Union[int, float, str]] = None
+    initialValue: Optional[Union[int, float, str]] = None
+    currentValue: Optional[Union[int, float, str]] = None
+    cashPnl: Optional[Union[int, float, str]] = None
+    percentPnl: Optional[Union[int, float, str]] = None
+    totalBought: Optional[Union[int, float, str]] = None
+    realizedPnl: Optional[Union[int, float, str]] = None
+    percentRealizedPnl: Optional[Union[int, float, str]] = None
+    curPrice: Optional[Union[int, float, str]] = None
+    redeemable: Optional[bool] = None
+    mergeable: Optional[bool] = None
+    title: Optional[str] = None
+    slug: Optional[str] = None
+    icon: Optional[str] = None
+    eventSlug: Optional[str] = None
+    outcome: Optional[str] = None
+    outcomeIndex: Optional[int] = None
+    oppositeOutcome: Optional[str] = None
+    oppositeAsset: Optional[str] = None
+    endDate: Optional[str] = None
+    negativeRisk: Optional[bool] = None
 
 
 class ClobReward(BaseModel):

@@ -214,6 +214,14 @@ def _format_decimal(value: Any) -> str:
         return str(value)
 
 
+def _format_boolean(value: Any) -> str:
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if value is None or value == "":
+        return "-"
+    return str(value)
+
+
 def print_trades(trades: Iterable[Mapping[str, Any]]) -> None:
     """Surface core fields from a list of trade dictionaries."""
     trade_list = list(trades)
@@ -237,4 +245,37 @@ def print_trades(trades: Iterable[Mapping[str, Any]]) -> None:
         log_print(f"Trader    : {trade.get('trader_side', '-')}")
         log_print(f"Match Time: {_format_timestamp(trade.get('match_time'))}")
         log_print(f"Tx Hash   : {trade.get('transaction_hash', '-')}")
+    log_print(border)
+
+
+def print_positions(positions: Iterable[Mapping[str, Any]]) -> None:
+    """Pretty-print key metrics for each active position."""
+    position_list = list(positions)
+    if not position_list:
+        log_print("No positions to display.")
+        return
+
+    border = "~" * 72
+    for position in position_list:
+        title = position.get("title") or position.get("slug") or "-"
+        log_print(border)
+        log_print(f"Market    : {title}")
+        log_print(f"Outcome   : {position.get('outcome', '-')}")
+        log_print(f"Tokens    : {_format_decimal(position.get('size'))}")
+        avg_price = _format_decimal(position.get("avgPrice"))
+        cur_price = _format_decimal(position.get("curPrice"))
+        log_print(f"Avg/Cur   : {avg_price} / {cur_price} USDC")
+        current_value = _format_decimal(position.get("currentValue"))
+        log_print(
+            f"Value     : {current_value} USDC "
+            f"(initial {_format_decimal(position.get('initialValue'))})"
+        )
+        cash_pnl = _format_decimal(position.get("cashPnl"))
+        pct_pnl = _format_decimal(position.get("percentPnl"))
+        log_print(f"P&L       : {cash_pnl} USDC ({pct_pnl}%)")
+        redeemable = _format_boolean(position.get("redeemable"))
+        mergeable = _format_boolean(position.get("mergeable"))
+        log_print(f"Redeemable: {redeemable} | Mergeable: {mergeable}")
+        end_date = position.get("endDate") or "-"
+        log_print(f"Ends      : {end_date}")
     log_print(border)
